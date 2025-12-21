@@ -62,7 +62,6 @@ def parse_predictions(data):
             "dir": p["rtdir"],
             "dest": p["des"],
             "mins": p["prdctdn"],
-            "delayed": p["dly"],
         })
 
     return results
