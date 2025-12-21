@@ -13,7 +13,7 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
-USE_FAKE_EPD = True
+USE_FAKE_EPD = False
 
 if not USE_FAKE_EPD:
     from waveshare_epd import epd2in7 as epd2in7
