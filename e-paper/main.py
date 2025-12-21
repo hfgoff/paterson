@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/pic')
 libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/lib')
@@ -10,10 +11,11 @@ if os.path.exists(libdir):
     sys.path.append(libdir)
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
-USE_FAKE_EPD = False
+USE_FAKE_EPD = os.getenv("USE_FAKE_EPD", "False").lower() in ("1", "true", "yes")
 
 if not USE_FAKE_EPD:
     from waveshare_epd import epd2in7 as epd2in7
@@ -87,10 +89,10 @@ def draw_display(predictions, generated_at):
 
     # accounts for ascenders/descenders
     title_height = font_title.getbbox("Ag")[3]
-    gap1 = 30
+    top_gap = 30
 
     y1 = y + title_height
-    y2 = y1 + gap1
+    y2 = y1 + top_gap
 
     draw.line((0, y1, epd.width, y1), fill=0)
     #
@@ -138,31 +140,40 @@ def draw_display(predictions, generated_at):
         
         y += row_height
 
-    gap2 = 20
+    bottom_gap = 55
     y3 = y + 4
     draw.line((0, y3, epd.width, y3), fill=0)    
-    y4 = y3 + gap2
+    y4 = y3 + bottom_gap
     draw.line((0, y4, epd.width, y4), fill=0)
 
-    y += y4 + 4
+    y = y4 + 4
 
-    draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
+    cst = generated_at.astimezone(ZoneInfo("America/Chicago"))
+    draw.text((0, y), f"{cst.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
 
-    line_height = font_sub.getbbox("Ag")[3]
-    y += line_height + 2
-    
     epd.display(epd.getbuffer(image))
     epd.sleep()
 
 
-def main():
-    data = load_json()
+def main_loop():
+    try:
+        while True:
+            try:
+                data = load_json()
+                predictions = parse_predictions(data)
+                generated_at = datetime.fromisoformat(data["GeneratedAt"])
+                draw_display(predictions, generated_at)
+            except Exception as e:
+                print(f"[ERROR] {e}")
+                time.sleep(5)
 
-    predictions = parse_predictions(data)
-    generated_at = datetime.fromisoformat(data["GeneratedAt"])
-
-    draw_display(predictions, generated_at)
-
+            time.sleep(60)
+    
+    except KeyboardInterrupt:
+        print("\nExiting...")
+        if not USE_FAKE_EPD:
+            epd2in7.epdconfig.module_exit()
+        exit()
 
 if __name__ == "__main__":
-    main()
+    main_loop()

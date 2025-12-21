@@ -10,6 +10,7 @@ build:
 
 run: build
 	./$(BINARY)
+	python e-paper/main.py
 
 paper:
 	python e-paper/main.py
