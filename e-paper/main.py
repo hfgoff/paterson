@@ -87,7 +87,7 @@ def draw_display(predictions, generated_at):
 
     # accounts for ascenders/descenders
     title_height = font_title.getbbox("Ag")[3]
-    gap1 = 50
+    gap1 = 30
 
     y1 = y + title_height
     y2 = y1 + gap1
@@ -138,7 +138,7 @@ def draw_display(predictions, generated_at):
         
         y += row_height
 
-    gap2 = 50
+    gap2 = 20
     y3 = y + 4
     y4 = y3 + gap2
 
@@ -148,6 +148,8 @@ def draw_display(predictions, generated_at):
     #
     draw.line((0, y4, epd.width, y4), fill=0)
 
+    y += y2 + 4
+    
     draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
 
     epd.display(epd.getbuffer(image))
