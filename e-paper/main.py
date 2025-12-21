@@ -90,7 +90,8 @@ def draw_display(predictions, generated_at):
     for p in predictions[:5]:
         dist = int(p["dist"])
         if dist == 0:
-            distance = ""
+            # The BusTime API returns 0 dstp when it's over 10 miles away
+            distance = f">10 mi"
         elif dist < 5280:
             distance = f"<1 mi"
         else:

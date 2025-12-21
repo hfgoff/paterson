@@ -1,14 +1,15 @@
-// go build -o bus
 package main
 
 import (
 	_ "embed"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -23,16 +24,19 @@ type BustimeResponse struct {
 }
 
 type Prd struct {
-	DistanceFeet       int    `json:"dstp"`
-	RouteDisplay       string `json:"rtdd"`
-	Direction          string `json:"rtdir"`
-	Destination        string `json:"des"`
-	PredictionDateTime string `json:"prdtm"`
-	IsDelayed          bool   `json:"dly"`
-	PredictionMinutes  string `json:"prdctdn"`
+	DistanceFeet      int    `json:"dstp"`
+	RouteDisplay      string `json:"rtdd"`
+	Direction         string `json:"rtdir"`
+	Destination       string `json:"des"`
+	PredictionMinutes string `json:"prdctdn"`
 }
 
 func main() {
+	var outDir, top string
+	flag.StringVar(&outDir, "out", ".", "where to output the predicitons")
+	flag.StringVar(&top, "top", "5", "number of predicitons to save")
+	flag.Parse()
+
 	env := make(map[string]string)
 
 	lines := strings.SplitSeq(dotenv, "\n")
@@ -46,8 +50,13 @@ func main() {
 		}
 	}
 
-	if env["API_KEY"] != "" {
+	var bustimeApiKey string
+	if env["BUSTIME_API_KEY"] != "" {
 		fmt.Printf("[info] loaded BusTime API key\n")
+		bustimeApiKey = env["BUSTIME_API_KEY"]
+	} else {
+		fmt.Printf("[error] did not load BusTime API key\n")
+		return
 	}
 
 	ticker := time.NewTicker(1 * time.Minute)
@@ -62,13 +71,11 @@ func main() {
 		}
 
 		requestParams := url.Values{}
-		requestParams.Set("key", env["API_KEY"])
-		// Paterson SOUTHBOUND
-		// See: https://metromap.cityofmadison.com/bustime/wireless/html/home.jsp
-		requestParams.Set("stpid", "10089")
-		requestParams.Set("top", "3")   // Get the next three predicitions
-		requestParams.Set("tmres", "s") // Set prediciton to seconds precision. Defaults to m (minutes)
-		requestParams.Set("format", "json")
+		requestParams.Set("key", bustimeApiKey)
+		requestParams.Set("stpid", "10089") // See: https://metromap.cityofmadison.com/bustime/wireless/html/home.jsp
+		requestParams.Set("top", top)
+		requestParams.Set("tmres", "s")     // Set prediciton to seconds precision. Defaults to m (minutes)
+		requestParams.Set("format", "json") // Get response in JSON becuase XML is evil
 
 		endpoint.RawQuery = requestParams.Encode()
 
@@ -103,16 +110,26 @@ func main() {
 
 		var out Out
 		out.Bustime = bustime
-		out.GeneratedAt = time.Now()
+		out.GeneratedAt = time.Now().UTC()
 
 		data, err := json.MarshalIndent(out, "", "  ")
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("[info] writing %d bytes\n", len(data))
+		file := filepath.Join(outDir, "next.json")
+		tmp := file + ".tmp"
 
-		os.WriteFile("next.json", data, 0644)
+		if err := os.WriteFile(tmp, data, 0644); err != nil {
+			panic(err)
+		}
+
+		if err := os.Rename(tmp, file); err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[info] wrote %d bytes at %s\n", len(data), out.GeneratedAt.Format("2006-01-02 15:04:05"))
+
 		<-ticker.C
 	}
 }
