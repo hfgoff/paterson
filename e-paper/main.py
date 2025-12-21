@@ -140,18 +140,17 @@ def draw_display(predictions, generated_at):
 
     gap2 = 20
     y3 = y + 4
+    draw.line((0, y3, epd.width, y3), fill=0)    
     y4 = y3 + gap2
-
-    draw.line((0, y3, epd.width, y3), fill=0)
-    #
-    # potentially draw something here
-    #
     draw.line((0, y4, epd.width, y4), fill=0)
 
-    y += y2 + 4
-    
+    y += y4 + 4
+
     draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
 
+    line_height = font_sub.getbbox("Ag")[3]
+    y += line_height + 2
+    
     epd.display(epd.getbuffer(image))
     epd.sleep()
 
