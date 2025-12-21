@@ -87,10 +87,10 @@ def draw_display(predictions, generated_at):
 
     # accounts for ascenders/descenders
     title_height = font_title.getbbox("Ag")[3]
-    gap = 30
+    gap1 = 50
 
     y1 = y + title_height
-    y2 = y1 + gap
+    y2 = y1 + gap1
 
     draw.line((0, y1, epd.width, y1), fill=0)
     #
@@ -138,9 +138,15 @@ def draw_display(predictions, generated_at):
         
         y += row_height
 
-    y += 4
-    draw.line((0, y, epd.width, y), fill=0)
-    y += 6
+    gap2 = 50
+    y3 = y + 4
+    y4 = y3 + gap2
+
+    draw.line((0, y3, epd.width, y3), fill=0)
+    #
+    # potentially draw something here
+    #
+    draw.line((0, y4, epd.width, y4), fill=0)
 
     draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
 
