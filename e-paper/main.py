@@ -87,7 +87,7 @@ def draw_display(predictions, generated_at):
 
     # accounts for ascenders/descenders
     title_height = font_title.getbbox("Ag")[3]
-    gap = 4
+    gap = 30
 
     y1 = y + title_height
     y2 = y1 + gap
@@ -99,7 +99,7 @@ def draw_display(predictions, generated_at):
     draw.line((0, y2, epd.width, y2), fill=0)
 
     # Move y down for the next line
-    y += y2 + 1
+    y += y2 + 4
 
     # Predictions
     for p in predictions[:5]:

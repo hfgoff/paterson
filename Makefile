@@ -11,5 +11,8 @@ build:
 run: build
 	./$(BINARY)
 
+paper:
+	python e-paper/main.py
+
 clean:
 	rm -f $(BINARY)
