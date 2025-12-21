@@ -2,8 +2,9 @@ import os
 import sys
 import json
 
-picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pic')
-libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
+picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/pic')
+libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/lib')
+fontdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fonts')
 
 if os.path.exists(libdir):
     sys.path.append(libdir)
@@ -11,10 +12,36 @@ if os.path.exists(libdir):
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
-from waveshare_epd import epd2in7 as epd2in7
+
+USE_FAKE_EPD = True
+
+if not USE_FAKE_EPD:
+    from waveshare_epd import epd2in7 as epd2in7
 
 JSON_PATH = Path(__file__).parent.parent / "next.json"
 
+class FakeEPD:
+    width = 176
+    height = 264
+
+    def init(self):
+        print("FakeEPD init")
+
+    def Clear(self, color=255):
+        print("FakeEPD clear")
+
+    def display(self, image_buffer):
+        # Convert buffer back to Image if needed
+        print("FakeEPD display called")
+        # image_buffer is already a PIL Image in Waveshare library
+        image_buffer.show(title="Fake EPD Display")
+
+    def getbuffer(self, image):
+        # Just return the PIL Image itself
+        return image
+
+    def sleep(self):
+        print("FakeEPD sleep")
 
 def load_json():
     if not JSON_PATH.exists():
@@ -42,23 +69,22 @@ def parse_predictions(data):
 
 
 def draw_display(predictions, generated_at):
-    epd = epd2in7.EPD()
+    epd = FakeEPD() if USE_FAKE_EPD else epd2in7.EPD()
+
     epd.init()
     epd.Clear(0xFF)
 
     image = Image.new("1", (epd.width, epd.height), 255)
     draw = ImageDraw.Draw(image)
 
-    font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 22)
-    font_body = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 18)
+    font_title = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 22)
+    font_body = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 18)
 
     y = 0
 
     # Header
     draw.text((0, y), "Paterson", font=font_title, fill=0)
-    y += 20
-    draw.line((0, y, epd.width, y), fill=0)
-    y += 5
+    y += 30
 
     # Predictions
     for p in predictions[:5]:
@@ -66,7 +92,7 @@ def draw_display(predictions, generated_at):
         if dist == 0:
             distance = ""
         elif dist < 5280:
-            distance = f"{dist} ft"
+            distance = f"<1 mi"
         else:
             distance = f"{dist / 5280:.1f} mi"
 
