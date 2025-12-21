@@ -78,20 +78,28 @@ def draw_display(predictions, generated_at):
 
     font_title = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 22)
     font_body = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 18)
+    font_sub = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 14)
 
     y = 0
 
     # Header
     draw.text((0, y), "Paterson", font=font_title, fill=0)
 
-    line_height = font_title.getbbox("Ag")[3]  # accounts for ascenders/descenders
-
-    draw.line((0, y, epd.width, y), fill=0)
+    # accounts for ascenders/descenders
+    title_height = font_title.getbbox("Ag")[3]
     gap = 4
-    draw.line((0, y, epd.width, y), fill=0)
+
+    y1 = y + line_height
+    y2 = y1 + gap
+
+    draw.line((0, y1, epd.width, y1), fill=0)
+    #
+    # potentially draw something here
+    #
+    draw.line((0, y2, epd.width, y2), fill=0)
 
     # Move y down for the next line
-    y += line_height + gap
+    y += y2 + 1
 
     # Predictions
     for p in predictions[:5]:
@@ -125,8 +133,8 @@ def draw_display(predictions, generated_at):
             draw.text((dx, y), distance, font=font_body, fill=0, anchor="ra")
         
         text_bbox = draw.textbbox((0, 0), route_info, font=font_body)
-        font_height = text_bbox[3] - text_bbox[1]  # bottom - top
-        row_height = max(2 * radius, font_height) + 4  # extra padding
+        font_height = text_bbox[3] - text_bbox[1]
+        row_height = max(2 * radius, font_height) + 4
         
         y += row_height
 
@@ -134,7 +142,7 @@ def draw_display(predictions, generated_at):
     draw.line((0, y, epd.width, y), fill=0)
     y += 6
 
-    draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_body, fill=0)
+    draw.text((0, y), f"{generated_at.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
 
     epd.display(epd.getbuffer(image))
     epd.sleep()
