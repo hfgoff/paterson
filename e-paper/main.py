@@ -126,7 +126,11 @@ def draw_display(predictions, generated_at):
     draw.line((0, y, epd.width, y), fill=0)
     y += 6
 
-    draw.text((0, y), f"Updated At {generated_at.strftime('%H:%M:%S')}", font=font_body, fill=0)
+    draw.text((0, y), f"Updated:", font=font_body, fill=0)
+    # Get top height (Capital A) and a lower height (decsending with lowercase g)
+    line_height = font_body.getbbox("Ag")[3]
+    y += line_height + 2
+    draw.text((0, y), f"{generated_at.strftime('%a at %H:%M')}", font=font_body, fill=0)
 
     epd.display(epd.getbuffer(image))
     epd.sleep()
