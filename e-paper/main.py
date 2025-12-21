@@ -89,7 +89,7 @@ def draw_display(predictions, generated_at):
     title_height = font_title.getbbox("Ag")[3]
     gap = 4
 
-    y1 = y + line_height
+    y1 = y + title_height
     y2 = y1 + gap
 
     draw.line((0, y1, epd.width, y1), fill=0)
