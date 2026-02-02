@@ -36,7 +36,9 @@ User=${RUN_USER}
 WorkingDirectory=${INSTALL_DIR}
 ExecStart=${INSTALL_DIR}/svc.sh
 Restart=always
-RestartSec=3
+RestartSec=10
+Nice=10
+CPUQuota=50%
 StandardOutput=journal
 StandardError=journal
 
