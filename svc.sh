@@ -10,7 +10,7 @@ echo "Installing ${SERVICE_NAME} service..."
 
 # Ensure running as root
 if [[ $EUID -ne 0 ]]; then
-  echo "Please run as root: sudo ./install.sh"
+  echo "Please run as root: sudo ./svc.sh"
   exit 1
 fi
 
@@ -44,15 +44,11 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-echo "Reloading systemd..."
-systemctl daemon-reexec
-systemctl daemon-reload
-
-echo "Enabling service..."
-systemctl enable ${SERVICE_NAME}
-
 echo "Starting service..."
+systemctl daemon-reload
+systemctl enable ${SERVICE_NAME}
 systemctl restart ${SERVICE_NAME}
 
 echo "Done!"
 echo "Logs: journalctl -u ${SERVICE_NAME} -f"
+echo "Ex: journalctl -u bus --since \"5 minutes ago\""
