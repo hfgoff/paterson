@@ -4,7 +4,7 @@ set -e
 SERVICE_NAME=bus
 INSTALL_DIR=/opt/bus
 SERVICE_FILE=/etc/systemd/system/${SERVICE_NAME}.service
-RUN_USER=pi
+RUN_USER=hunter
 
 echo "Installing ${SERVICE_NAME} service..."
 
