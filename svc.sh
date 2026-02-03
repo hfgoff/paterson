@@ -27,7 +27,7 @@ chmod +x "$INSTALL_DIR/svc.sh"
 echo "Writing systemd service..."
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=Bus + E-Paper Service
+Description=Bus Service
 After=network.target
 
 [Service]

@@ -186,5 +186,9 @@ def main_loop():
             epd2in7.epdconfig.module_exit()
         exit()
 
+    finally:
+        if not USE_FAKE_EPD:
+            epd2in7.epdconfig.module_exit()
+
 if __name__ == "__main__":
     main_loop()
