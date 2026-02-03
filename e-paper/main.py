@@ -49,8 +49,9 @@ class FakeEPD:
 
 def load_json():
     if not JSON_PATH.exists():
-        raise FileNotFoundError(f"{JSON_PATH} does not exist")
-
+        print(f"[WARN] {JSON_PATH} does not exist, skipping...")
+        return {"Bustime": {"bustime-response": {"prd":[]}}, "GeneratedAt": datetime.utcnow().isoformat()}
+    
     with JSON_PATH.open("r") as f:
         return json.load(f)
 
