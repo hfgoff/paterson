@@ -22,7 +22,7 @@ rsync -a --delete ./ "$INSTALL_DIR/"
 
 echo "Fixing permissions..."
 chown -R ${RUN_USER}:${RUN_USER} "$INSTALL_DIR"
-chmod +x "$INSTALL_DIR/svc.sh"
+chmod +x "$INSTALL_DIR/run.sh"
 
 echo "Writing systemd service..."
 cat > "$SERVICE_FILE" <<EOF
