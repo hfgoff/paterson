@@ -59,6 +59,12 @@ func main() {
 		return
 	}
 
+	// Align to the top of the minute
+	now := time.Now()
+	sleep := now.Truncate(time.Minute).Add(time.Minute).Sub(now)
+	fmt.Printf("[info] waiting %s to align to :00\n", sleep)
+	time.Sleep(sleep)
+
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 

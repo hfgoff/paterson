@@ -161,31 +161,34 @@ def draw_display(predictions, generated_at):
     y = y4 + 4
 
     cst = generated_at.astimezone(ZoneInfo("America/Chicago"))
-    draw.text((0, y), f"{cst.strftime('%a, %b %d at %H:%M')}", font=font_sub, fill=0)
+    draw.text((0, y), f"{cst.strftime('%a, %b %d %H:%M:%S')}", font=font_sub, fill=0)
 
     epd.display(epd.getbuffer(image))
     epd.sleep()
 
 
 def main_loop():
+    last_mtime = None 
+
     try:
         while True:
             try:
-                data = load_json()
-                predictions = parse_predictions(data)
-                generated_at = datetime.fromisoformat(data["GeneratedAt"])
-                draw_display(predictions, generated_at)
+                if JSON_PATH.exists():
+                    mtime = JSON_PATH.stat().st_mtime
+                if last_mtime is None or mtime != last_mtime:
+                    last_mtime = mtime
+                    data = load_json()
+                    predictions = parse_predictions(data)
+                    generated_at = datetime.fromisoformat(data["GeneratedAt"])
+                    draw_display(predictions, generated_at)
             except Exception as e:
                 print(f"[ERROR] {e}")
                 time.sleep(5)
 
-            time.sleep(60)
+            time.sleep(0.2)
     
     except KeyboardInterrupt:
         print("\nExiting...")
-        if not USE_FAKE_EPD:
-            epd2in7.epdconfig.module_exit()
-        exit()
 
     finally:
         if not USE_FAKE_EPD:
