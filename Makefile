@@ -15,5 +15,9 @@ run: build
 paper:
 	python e-paper/main.py
 
+ # if not in venv, source .venv/bin/activate
+fake:
+	USE_FAKE_EPD=true python3 e-paper/main.py
+
 clean:
 	rm -f $(BINARY)

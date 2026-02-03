@@ -2,25 +2,27 @@ import os
 import sys
 import json
 import time
+from pathlib import Path
 
-picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/pic')
-libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'RaspberryPi_JetsonNano/python/lib')
-fontdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fonts')
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+picdir = BASE_DIR / 'e-paper/RaspberryPi_JetsonNano/python/pic'
+libdir = BASE_DIR / 'e-paper/RaspberryPi_JetsonNano/python/lib'
+fontdir = BASE_DIR / 'e-paper/fonts'
 
 if os.path.exists(libdir):
-    sys.path.append(libdir)
+    sys.path.append(str(libdir))
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from PIL import Image, ImageDraw, ImageFont
-from pathlib import Path
 
 USE_FAKE_EPD = os.getenv("USE_FAKE_EPD", "False").lower() in ("1", "true", "yes")
 
 if not USE_FAKE_EPD:
     from waveshare_epd import epd2in7 as epd2in7
 
-JSON_PATH = Path(__file__).parent.parent / "next.json"
+JSON_PATH = BASE_DIR / "next.json"
 
 class FakeEPD:
     width = 176
@@ -58,12 +60,21 @@ def parse_predictions(data):
     results = []
 
     for p in prds:
+        dist = int(p["dstp"])
+        mins = p["prdctdn"]
+
+        # Normalize DUE, it's ugly
+        if mins == "DUE" and dist < 5280:
+            mins = "<1"
+        elif mins == "DUE":
+            mins = "0"
+
         results.append({
             "dist": p["dstp"],
             "route": p["rtdd"],
             "dir": p["rtdir"],
             "dest": p["des"],
-            "mins": p["prdctdn"],
+            "mins": mins,
         })
 
     return results
@@ -78,9 +89,9 @@ def draw_display(predictions, generated_at):
     image = Image.new("1", (epd.width, epd.height), 255)
     draw = ImageDraw.Draw(image)
 
-    font_title = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 22)
-    font_body = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 18)
-    font_sub = ImageFont.truetype(fontdir + "/DejaVuSansMono-Bold.ttf", 14)
+    font_title = ImageFont.truetype(fontdir / "DejaVuSansMono-Bold.ttf", 22)
+    font_body = ImageFont.truetype(fontdir / "DejaVuSansMono-Bold.ttf", 18)
+    font_sub = ImageFont.truetype(fontdir / "DejaVuSansMono-Bold.ttf", 14)
 
     y = 0
 

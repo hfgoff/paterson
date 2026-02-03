@@ -35,6 +35,7 @@ Type=simple
 User=${RUN_USER}
 WorkingDirectory=${INSTALL_DIR}
 ExecStart=${INSTALL_DIR}/run.sh
+KillMode=control-group
 Restart=always
 RestartSec=10
 Nice=10
