@@ -69,11 +69,15 @@ func main() {
 	defer ticker.Stop()
 
 	for {
-		client := &http.Client{}
+		client := &http.Client{
+			Timeout: 15 * time.Second,
+		}
 
 		endpoint, err := url.Parse("https://metromap.cityofmadison.com/bustime/api/v3/getpredictions")
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] request failed: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		requestParams := url.Values{}
@@ -87,26 +91,50 @@ func main() {
 
 		req, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] building request: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		fmt.Printf("[info] making request to: %s\n", req.URL)
 
 		resp, err := client.Do(req)
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] doing: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
-		body, err := io.ReadAll(resp.Body)
+		const maxbody = 1 << 20 // 1 MB
+
+		limited := io.LimitReader(resp.Body, maxbody)
+
+		body, err := io.ReadAll(limited)
 		resp.Body.Close()
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] read failed: %v\n", err)
+			<-ticker.C
+			continue
+		}
+
+		if len(body) > maxbody {
+			fmt.Printf("[error] response too large (%d bytes)\n", len(body))
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			fmt.Printf("[error] bad status: %s\n", resp.Status)
+			resp.Body.Close()
+			<-ticker.C
+			continue
 		}
 
 		var bustime BustimeResponse
 		err = json.Unmarshal(body, &bustime)
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] invalid JSON: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		type Out struct {
@@ -120,18 +148,24 @@ func main() {
 
 		data, err := json.MarshalIndent(out, "", "  ")
 		if err != nil {
-			panic(err)
+			fmt.Printf("[error] indenting failed: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		file := filepath.Join(outDir, "next.json")
 		tmp := file + ".tmp"
 
 		if err := os.WriteFile(tmp, data, 0644); err != nil {
-			panic(err)
+			fmt.Printf("[error] write failed: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		if err := os.Rename(tmp, file); err != nil {
-			panic(err)
+			fmt.Printf("[error] rename failed: %v\n", err)
+			<-ticker.C
+			continue
 		}
 
 		fmt.Printf("[info] wrote %d bytes at %s\n", len(data), out.GeneratedAt.Format("2006-01-02 15:04:05"))
